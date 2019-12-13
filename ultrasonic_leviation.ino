@@ -1,5 +1,5 @@
-#define AIN2 2
-#define BIN1 3
+#define AIN2 3
+#define BIN1 4
 volatile uint8_t portD3_D4 = 8; // единица на D3 и ноль на D4
 void setup() {
   pinMode(AIN2, OUTPUT);

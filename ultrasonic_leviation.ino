@@ -101,15 +101,18 @@ void setup()
       phasePartNum += STEP_SIZE;
     else {
       phasePartNum = 0;
+      
       if(0b00000001 & state)
         curPhasePointer = &phases[phaseNum][0];
       else if(0b00000010 & state)
         curPhasePointer = &offArr[0];
+        
       if(i != round(waveFreq/sendingFreq)){
         i++;
       } else {
         i = 0;
         USART_Transmit(phaseNum);
+        
         // if any command received and arduino is on
         if((0b00111100 & state) && (0b00000001 & state)){
           // lift up
@@ -137,6 +140,7 @@ void setup()
           else if(0b00100000 & state){
             // just dont change phaseNum
           }
+        // reset phaseNum when off
         } else phaseNum = 0;
       }
       state = USART_Receive(state);

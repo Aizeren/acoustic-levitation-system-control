@@ -15,6 +15,7 @@ Dialog::Dialog(QWidget *parent)
     arduino_is_available = false;
     arduino_port_name = "";
     arduino = new QSerialPort();
+    isArduinoOn = true;
 
 //    qDebug() << "Number of available ports: " << QSerialPortInfo::availablePorts().length();
 //    foreach(const QSerialPortInfo &serialPortInfo, QSerialPortInfo::availablePorts()){
@@ -71,29 +72,47 @@ void Dialog::readSerial(){
 
 void Dialog::on_turnOnPushButton_clicked()
 {
+    isArduinoOn = true;
     sendDataToArduino(1);
 }
 
 void Dialog::on_turnOffPushButton_clicked()
 {
+    isArduinoOn = false;
     sendDataToArduino(2);
 }
 
 void Dialog::on_upPushButton_clicked()
 {
-    sendDataToArduino(4);
+    if(isArduinoOn)
+        sendDataToArduino(4+1);
+    else
+        sendDataToArduino(4);
 }
 
 void Dialog::on_initPushButton_clicked()
 {
-   sendDataToArduino(8);
+    if(isArduinoOn)
+        sendDataToArduino(8+1);
+    else
+        sendDataToArduino(8);
 }
 
 void Dialog::on_downPushButton_clicked()
 {
-   sendDataToArduino(16);
+    if(isArduinoOn)
+        sendDataToArduino(16+1);
+    else
+        sendDataToArduino(16);
 }
 
+void Dialog::on_stopPushButton_clicked()
+{
+    if(isArduinoOn)
+        sendDataToArduino(32+1);
+    else
+        sendDataToArduino(32);
+}
 void Dialog::sendDataToArduino(char val){
     if(arduino->isWritable()){
         arduino->write(QByteArray(&val));
@@ -101,3 +120,5 @@ void Dialog::sendDataToArduino(char val){
         QMessageBox::warning(this, "Port error", "Couldn't write data to Arduino!");
     }
 }
+
+

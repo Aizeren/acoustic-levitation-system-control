@@ -12,6 +12,7 @@
 inline unsigned char USART_Receive();
 inline void USART_Transmit(unsigned char);
 
+static byte offArr[RESOLUTION] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 static byte phases[RESOLUTION][RESOLUTION] = 
 {{0x5,0x5,0x5,0x5,0x5,0x5,0x5,0x5,0x5,0x5,0x5,0x5,0xa,0xa,0xa,0xa,0xa,0xa,0xa,0xa,0xa,0xa,0xa,0xa},
 {0x9,0x5,0x5,0x5,0x5,0x5,0x5,0x5,0x5,0x5,0x5,0x5,0x6,0xa,0xa,0xa,0xa,0xa,0xa,0xa,0xa,0xa,0xa,0xa},
@@ -46,13 +47,16 @@ void setup()
   // bit 2 - Lift Up
   // bit 3 - Initial Position
   // bit 4 - Lift Down
-  byte state = 0b00000000;
-  byte phaseNum = 2;
-  byte tmp = 0;
-  byte* emittingPointer = &phases[0][0];
+  byte state = 0b00000001;
+  byte phaseNum = 0;
+  byte* curPhasePointer = &phases[0][0];
   short phasePartNum = 0;
   // counter for sending/receiving data
   int i = 0;
+  // how many times per second send data
+  int sendingFreq = 4;
+  // frequency in Hz
+  long waveFreq = 40000;
   // USART BAUD/8-N-1
   Serial.begin(BAUD);
   // UBRR0 = BRC;
@@ -74,8 +78,8 @@ void setup()
   // Fast PWM mode, COM1B1 - clear OC1B on compare, CS10 - no prescaler
   TCCR1A = bit (WGM10) | bit (WGM11) | bit (COM1B1);
   TCCR1B = bit (WGM12) | bit (WGM13) | bit (CS10);
-  OCR1A =  floor(F_CPU / (24*40000))-1;
-  OCR1B = floor(F_CPU / (24*40000*2));
+  OCR1A =  round(F_CPU / (24*waveFreq))-1;
+  OCR1B = round(F_CPU / (24*waveFreq*2));
   
   interrupts();
 
@@ -85,30 +89,59 @@ void setup()
   power_spi_disable();
   power_twi_disable();
   power_timer0_disable();
-  
+
 
   /*------------------------------------------------------------------------*/
   LOOP:
     
     while(PINB & 0b00001000); //wait for pin 11 (B3) to go low
-    OUTPUT_WAVE(emittingPointer, phasePartNum);
+    OUTPUT_WAVE(curPhasePointer, phasePartNum);
     
     if (phasePartNum < RESOLUTION - 1)
       phasePartNum += STEP_SIZE;
     else {
       phasePartNum = 0;
-      if(i != 10000){
-        i += 1;
+      if(0b00000001 & state)
+        curPhasePointer = &phases[phaseNum][0];
+      else if(0b00000010 & state)
+        curPhasePointer = &offArr[0];
+      if(i != round(waveFreq/sendingFreq)){
+        i++;
       } else {
         i = 0;
         USART_Transmit(phaseNum);
-        if (phaseNum < RESOLUTION - 1){
-          phaseNum += 1;
+        // if any command received and arduino is on
+        if((0b00111100 & state) && (0b00000001 & state)){
+          // lift up
+          if(0b00000100 & state){
+            if(phaseNum > 0)
+              phaseNum--;
+            else
+              phaseNum = RESOLUTION - 1;
+          }   
+          //lift down
+          else if(0b00010000 & state){
+            if(phaseNum < RESOLUTION - 1)
+              phaseNum++;
+            else
+              phaseNum = 0;
+          }    
+          // init position
+          else if(0b00001000 & state){
+            if(phaseNum > 0)
+              phaseNum--;
+            else
+              phaseNum = 0;
+          }
+          // stop
+          else if(0b00100000 & state){
+            // just dont change phaseNum
+          }
         } else phaseNum = 0;
       }
       state = USART_Receive(state);
     }
-    
+
   goto LOOP;
   /*------------------------------------------------------------------------*/
 }

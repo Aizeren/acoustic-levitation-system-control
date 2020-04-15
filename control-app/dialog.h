@@ -26,6 +26,8 @@ private slots:
     //void sendDataToArduino(QString);
     void sendDataToArduino(char);
 
+    void on_stopPushButton_clicked();
+
 private:
     Ui::Dialog *ui;
     QSerialPort *arduino;
@@ -33,6 +35,7 @@ private:
     static const quint16 arduino_product_id = 29987;
     QString arduino_port_name;
     bool arduino_is_available;
+    bool isArduinoOn;
 
 };
 #endif // DIALOG_H

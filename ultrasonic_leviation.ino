@@ -47,7 +47,8 @@ void setup()
   // bit 3 - Initial Position
   // bit 4 - Lift Down
   byte state = 0b00000000;
-  byte phaseNum = 0;
+  byte phaseNum = 2;
+  byte tmp = 0;
   byte* emittingPointer = &phases[0][0];
   short phasePartNum = 0;
   // counter for sending/receiving data
@@ -73,7 +74,7 @@ void setup()
   // Fast PWM mode, COM1B1 - clear OC1B on compare, CS10 - no prescaler
   TCCR1A = bit (WGM10) | bit (WGM11) | bit (COM1B1);
   TCCR1B = bit (WGM12) | bit (WGM13) | bit (CS10);
-  OCR1A =  floor(F_CPU / (24*40000));
+  OCR1A =  floor(F_CPU / (24*40000))-1;
   OCR1B = floor(F_CPU / (24*40000*2));
   
   interrupts();
@@ -105,6 +106,7 @@ void setup()
           phaseNum += 1;
         } else phaseNum = 0;
       }
+      state = USART_Receive(state);
     }
     
   goto LOOP;
@@ -113,15 +115,17 @@ void setup()
 
 void loop(){}
 
-inline unsigned char USART_Receive()
+inline byte USART_Receive( byte oldData )
 {
   // wait for data in register
-  while ( !(UCSR0A & (1<<RXC0)) );
-  // get and return received data
-  return UDR0;
+  if( (UCSR0A & (1<<RXC0)) )
+    // get and return received data
+    return UDR0;
+  else
+    return oldData;
 }
 
-inline void USART_Transmit( unsigned char data )
+inline void USART_Transmit( byte data )
 {
   // wait until the register is empty
   while ( !( UCSR0A & (1<<UDRE0)) );

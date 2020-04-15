@@ -71,32 +71,32 @@ void Dialog::readSerial(){
 
 void Dialog::on_turnOnPushButton_clicked()
 {
-    sendDataToArduino(QString("c%1").arg(1));
+    sendDataToArduino(1);
 }
 
 void Dialog::on_turnOffPushButton_clicked()
 {
-    sendDataToArduino(QString("c%1").arg(2));
+    sendDataToArduino(2);
 }
 
 void Dialog::on_upPushButton_clicked()
 {
-    sendDataToArduino(QString("c%1").arg(4));
+    sendDataToArduino(4);
 }
 
 void Dialog::on_initPushButton_clicked()
 {
-    sendDataToArduino(QString("c%1").arg(8));
+   sendDataToArduino(8);
 }
 
 void Dialog::on_downPushButton_clicked()
 {
-    sendDataToArduino(QString("c%1").arg(16));
+   sendDataToArduino(16);
 }
 
-void Dialog::sendDataToArduino(QString val){
+void Dialog::sendDataToArduino(char val){
     if(arduino->isWritable()){
-        arduino->write(val.toStdString().c_str());
+        arduino->write(QByteArray(&val));
     } else {
         QMessageBox::warning(this, "Port error", "Couldn't write data to Arduino!");
     }

@@ -23,7 +23,8 @@ private slots:
     void on_upPushButton_clicked();
     void on_initPushButton_clicked();
     void on_downPushButton_clicked();
-    void sendDataToArduino(QString);
+    //void sendDataToArduino(QString);
+    void sendDataToArduino(char);
 
 private:
     Ui::Dialog *ui;

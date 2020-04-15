@@ -14,92 +14,25 @@
    <string>Dialog</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_2">
-   <item row="1" column="0">
-    <widget class="QPushButton" name="turnOnPushButton">
-     <property name="text">
-      <string>Turn On</string>
+   <item row="1" column="1">
+    <widget class="QLabel" name="label_3">
+     <property name="font">
+      <font>
+       <pointsize>14</pointsize>
+      </font>
      </property>
-    </widget>
-   </item>
-   <item row="0" column="0">
-    <layout class="QGridLayout" name="gridLayout" rowstretch="1,2" columnstretch="2,6,1" rowminimumheight="50,0">
-     <item row="1" column="1">
-      <widget class="QLCDNumber" name="brightnessLcdNumber">
-       <property name="digitCount">
-        <number>4</number>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="brightTextlabel">
-       <property name="font">
-        <font>
-         <pointsize>13</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>Brightness</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_3">
-       <property name="font">
-        <font>
-         <pointsize>14</pointsize>
-        </font>
-       </property>
-       <property name="autoFillBackground">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string>Received
-Height</string>
-       </property>
-       <property name="scaledContents">
-        <bool>false</bool>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="2">
-      <widget class="QLabel" name="brightnessLabel">
-       <property name="font">
-        <font>
-         <pointsize>14</pointsize>
-         <weight>50</weight>
-         <bold>false</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string>0</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QSlider" name="brightnessSlider">
-       <property name="maximum">
-        <number>255</number>
-       </property>
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item row="6" column="0">
-    <widget class="QPushButton" name="downPushButton">
+     <property name="autoFillBackground">
+      <bool>false</bool>
+     </property>
      <property name="text">
-      <string>Lift Down</string>
+      <string>Received
+Height</string>
+     </property>
+     <property name="scaledContents">
+      <bool>false</bool>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
      </property>
     </widget>
    </item>
@@ -110,10 +43,17 @@ Height</string>
      </property>
     </widget>
    </item>
-   <item row="4" column="0">
-    <widget class="QPushButton" name="upPushButton">
+   <item row="6" column="0">
+    <widget class="QPushButton" name="downPushButton">
      <property name="text">
-      <string>Lift Up</string>
+      <string>Lift Down</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QPushButton" name="turnOnPushButton">
+     <property name="text">
+      <string>Turn On</string>
      </property>
     </widget>
    </item>
@@ -121,6 +61,20 @@ Height</string>
     <widget class="QPushButton" name="turnOffPushButton">
      <property name="text">
       <string>Turn Off</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="2">
+    <widget class="QLCDNumber" name="heightNumber">
+     <property name="digitCount">
+      <number>2</number>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QPushButton" name="upPushButton">
+     <property name="text">
+      <string>Lift Up</string>
      </property>
     </widget>
    </item>

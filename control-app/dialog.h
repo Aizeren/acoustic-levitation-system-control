@@ -17,8 +17,6 @@ public:
     ~Dialog();
 
 private slots:
-    void on_brightnessSlider_valueChanged(int value);
-    void updateBrightness(int);
     void readSerial();
     void on_turnOnPushButton_clicked();
     void on_turnOffPushButton_clicked();

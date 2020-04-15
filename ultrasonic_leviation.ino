@@ -3,11 +3,14 @@
 // Settings for serial port
 // Make sure BAUD is the same as in Control App
 #define BAUD  115200UL
-#define BRC   ((F_CPU / (16*BAUD)) - 1)
+// #define BRC   ((F_CPU / (16*BAUD)) - 1)
 #define RESOLUTION 24
 #define STEP_SIZE 1
 
 #define OUTPUT_WAVE(pointer, i) PORTC = pointer[i]
+
+inline unsigned char USART_Receive();
+inline void USART_Transmit(unsigned char);
 
 static byte phases[RESOLUTION][RESOLUTION] = 
 {{0x5,0x5,0x5,0x5,0x5,0x5,0x5,0x5,0x5,0x5,0x5,0x5,0xa,0xa,0xa,0xa,0xa,0xa,0xa,0xa,0xa,0xa,0xa,0xa},
@@ -47,8 +50,11 @@ void setup()
   byte phaseNum = 0;
   byte* emittingPointer = &phases[0][0];
   short phasePartNum = 0;
+  // counter for sending/receiving data
+  int i = 0;
   // USART BAUD/8-N-1
-  UBRR0 = BRC;
+  Serial.begin(BAUD);
+  // UBRR0 = BRC;
   // Enable sending/receiving
   UCSR0B = (1<<TXEN0)|(1<<RXEN0);
 
@@ -79,7 +85,7 @@ void setup()
   power_twi_disable();
   power_timer0_disable();
   
- 
+
   /*------------------------------------------------------------------------*/
   LOOP:
     
@@ -90,6 +96,15 @@ void setup()
       phasePartNum += STEP_SIZE;
     else {
       phasePartNum = 0;
+      if(i != 10000){
+        i += 1;
+      } else {
+        i = 0;
+        USART_Transmit(phaseNum);
+        if (phaseNum < RESOLUTION - 1){
+          phaseNum += 1;
+        } else phaseNum = 0;
+      }
     }
     
   goto LOOP;
@@ -97,3 +112,19 @@ void setup()
 }
 
 void loop(){}
+
+inline unsigned char USART_Receive()
+{
+  // wait for data in register
+  while ( !(UCSR0A & (1<<RXC0)) );
+  // get and return received data
+  return UDR0;
+}
+
+inline void USART_Transmit( unsigned char data )
+{
+  // wait until the register is empty
+  while ( !( UCSR0A & (1<<UDRE0)) );
+  // send data
+  UDR0 = data;
+}

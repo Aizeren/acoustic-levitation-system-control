@@ -10,7 +10,7 @@ Dialog::Dialog(QWidget *parent)
     , ui(new Ui::Dialog)
 {
     ui->setupUi(this);
-    ui->brightnessLcdNumber->display("----");
+    ui->heightNumber->display("--");
 
     arduino_is_available = false;
     arduino_port_name = "";
@@ -61,26 +61,12 @@ Dialog::~Dialog()
     delete ui;
 }
 
-
-void Dialog::on_brightnessSlider_valueChanged(int value)
-{
-    ui->brightnessLabel->setText(QString("%1").arg(value));
-    Dialog::updateBrightness(value);
-}
-
-void Dialog::updateBrightness(int value){
-    if(arduino->isWritable()){
-        arduino->write(QString("i%1").arg(value).toStdString().c_str());
-    } else {
-        QMessageBox::warning(this, "Port error", "Couldn't write data to Arduino!");
-    }
-}
-
 void Dialog::readSerial(){
+    bool ok;
     QByteArray serialData = arduino->readAll();
-    QString receivedBrightness = QString::fromStdString(serialData.toStdString());
-    qDebug() << receivedBrightness;
-   // ui->brightnessLcdNumber->display(receivedBrightness);
+    int receivedFrameNum = QString::fromStdString(serialData.toHex().toStdString()).toInt(&ok, 16);
+    ui->heightNumber->display(receivedFrameNum);
+    qDebug() << receivedFrameNum;
 }
 
 void Dialog::on_turnOnPushButton_clicked()

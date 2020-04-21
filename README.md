@@ -3,7 +3,7 @@ This project uses Arduino and ultrasonic emitters to levitate small particles in
 
 # You will need:
 1. Arduino Uno
-2. At least 2 ultrasonic emitters (e.g. can be extracted from US-015 HC-SR04)
+2. At least 2 ultrasonic emitters (e.g. can be extracted from US-015 or HC-SR04)
 3. TB6612 Motor Driver or equivalent
 
 # Running

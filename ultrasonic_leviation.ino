@@ -78,8 +78,8 @@ void setup()
   // Fast PWM mode, COM1B1 - clear OC1B on compare, CS10 - no prescaler
   TCCR1A = bit (WGM10) | bit (WGM11) | bit (COM1B1);
   TCCR1B = bit (WGM12) | bit (WGM13) | bit (CS10);
-  OCR1A =  round(F_CPU / (24*waveFreq))-1;
-  OCR1B = round(F_CPU / (24*waveFreq*2));
+  OCR1A =  round(F_CPU / (RESOLUTION*waveFreq))-1;
+  OCR1B = round(F_CPU / (RESOLUTION*waveFreq*2));
   
   interrupts();
 

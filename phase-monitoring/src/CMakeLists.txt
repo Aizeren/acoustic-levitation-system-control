@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(SOURCE main.cpp functions.cpp)
 set(HEADER functions.h)
 set(OpenCV_DIR C:/opencv/build)
+FILE(COPY background.jpg DESTINATION "${CMAKE_BINARY_DIR}/Resources")
+FILE(COPY frame.jpg DESTINATION "${CMAKE_BINARY_DIR}/Resources")
 
 find_package(OpenCV REQUIRED)
 add_executable(phase-monitoring ${SOURCE} ${HEADER})

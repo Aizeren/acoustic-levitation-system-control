@@ -1,6 +1,6 @@
 #include "functions.h"
 
-int findCenterOfEmitters(Mat mask) {
+vector<int> findSidesOfEmitters(Mat mask) {
 	int leftX = -1, rightX = -1;
 	Mat col;
 
@@ -14,14 +14,14 @@ int findCenterOfEmitters(Mat mask) {
 		}
 	}
 
-	return round(leftX + float(rightX - leftX)/2);
+	return vector<int>{leftX, rightX};
 }
 
-vector<Point2i> findEmittersEdges(Mat mask) {
+vector<Point2i> findEmittersEdges(Mat mask, vector<int> emitterSides) {
 	vector<Point2i> res(4, Point2i(0, 0));
 	uchar edgeCounter = 0, curColor, nextColor;
 	Mat col;
-	uint xCenter = findCenterOfEmitters(mask);
+	uint xCenter = round(emitterSides.at(0) + float(emitterSides.at(1) - emitterSides.at(0)) / 2);
 	for (int x = xCenter; x < mask.size().width - 1; x++) {
 		col = mask(Range::all(), Range(x, x + 1)).clone();
 		edgeCounter = 0;
@@ -53,13 +53,37 @@ vector<Point2i> calcNodesCoords(vector<Point2i> emittersEdges, float waveLen, fl
 	uint emitter2Height = abs(emittersEdges.at(2).y - emittersEdges.at(3).y);
 	float emitterHeight = (emitter1Height + emitter2Height)/2;
 
-	float pixelsInHalfWave = (emitterHeight * (waveLen/2)) / labelLen+3;
+	float pixelsInHalfWave = (emitterHeight * (waveLen/2)) / labelLen;
 
 	uint workAreaHeight = waveLen * round(abs(emittersEdges.at(1).y - emittersEdges.at(2).y) / waveLen);
 	uint numOfNodes = round(workAreaHeight / pixelsInHalfWave) - isPhase;
 
 	for (int i = isPhase; i < numOfNodes + isPhase; i++) {
 		res.push_back(Point2i(xcoord, round(ytop + i * pixelsInHalfWave + phaseShift * pixelsInHalfWave)));
+	}
+
+	return res;
+}
+
+vector<bool> findBusyNodes(vector<Point2i> nodesCoordinates, Mat objectsMask) {
+	vector<bool> res(nodesCoordinates.size(), false);
+	short delta = 2;
+	Rect2i nodeRoi;
+	Mat maskCropped;
+
+	for (int i = 0; i < nodesCoordinates.size(); i++) {
+		nodeRoi = Rect2i(Point(0, nodesCoordinates.at(i).y - delta),
+						 Point(objectsMask.size().width, nodesCoordinates.at(i).y + delta));
+		maskCropped = objectsMask(nodeRoi);
+		for (int x = 0; x < maskCropped.size().width; x++) {
+			for (int y = 0; y < maskCropped.size().height; y++)
+				if (maskCropped.at<uchar>(Point(x, y)) != 0) {
+					res.at(i) = true;
+					break;
+				}
+			if (res.at(i) == true)
+				break;
+		}
 	}
 
 	return res;

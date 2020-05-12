@@ -36,6 +36,10 @@ private:
     QString arduino_port_name;
     bool arduino_is_available;
     bool isArduinoOn;
+    QFile curPhaseFile;
+    QFile nodesStatesFile;
+    int receivedFrameNum;
+    QString receivedNodesStates;
 
 };
 #endif // DIALOG_H

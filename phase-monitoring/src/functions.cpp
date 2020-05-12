@@ -47,8 +47,8 @@ vector<Point2i> calcNodesCoords(vector<Point2i> emittersEdges, float waveLen, fl
 	int xcoord = emittersEdges.at(0).x;
 	int ytop = emittersEdges.at(1).y;
 	int ybottom = emittersEdges.at(2).y;
-	char isPhase = (phaseNum == 0) ? 0 : 1;
-	float phaseShift = (phaseNum == maxPhaseNum) ? 0 : (phaseNum / maxPhaseNum + 0.5);
+	char isAntiphase = (phaseNum == 0) ? 0 : 1; // 0 - yes
+	float phaseShift = float(phaseNum) / float(maxPhaseNum) + 0.4;
 	uint emitter1Height = abs(emittersEdges.at(0).y - emittersEdges.at(1).y);
 	uint emitter2Height = abs(emittersEdges.at(2).y - emittersEdges.at(3).y);
 	float emitterHeight = (emitter1Height + emitter2Height)/2;
@@ -56,9 +56,9 @@ vector<Point2i> calcNodesCoords(vector<Point2i> emittersEdges, float waveLen, fl
 	float pixelsInHalfWave = (emitterHeight * (waveLen/2)) / labelLen;
 
 	uint workAreaHeight = waveLen * round(abs(emittersEdges.at(1).y - emittersEdges.at(2).y) / waveLen);
-	uint numOfNodes = round(workAreaHeight / pixelsInHalfWave) - isPhase;
+	uint numOfNodes = round(workAreaHeight / pixelsInHalfWave) - isAntiphase;
 
-	for (int i = isPhase; i < numOfNodes + isPhase; i++) {
+	for (int i = 0; i < numOfNodes; i++) {
 		res.push_back(Point2i(xcoord, round(ytop + i * pixelsInHalfWave + phaseShift * pixelsInHalfWave)));
 	}
 

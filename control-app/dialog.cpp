@@ -104,6 +104,7 @@ void Dialog::on_turnOnPushButton_clicked()
 void Dialog::on_turnOffPushButton_clicked()
 {
     isArduinoOn = false;
+    ui->heightNumber->display("--");
     sendDataToArduino(2);
 }
 

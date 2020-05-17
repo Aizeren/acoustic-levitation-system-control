@@ -22,7 +22,7 @@ int main()
         return -1;
     }
     cvtColor(background, backgroundGray, COLOR_BGR2GRAY);
-    Mat objectsMask, imgDiff, labelMask, stabilizedFrameGray, stabilizedFrame, backgroundHSV,
+    Mat objectsMask, imgDiff, labelMask, stabilizedFrameGray, stabilizedFrame, stabilizedFrameHSV,
         backgroundCropped, backgroundGrayCropped;
     vector<Point2f> backPts, framePts;
     vector<uchar> status;
@@ -77,8 +77,8 @@ int main()
         stabilizedFrame = stabilizedFrame(stabilizedFrameROI);
 
         // Detect labels of emitters
-        cvtColor(stabilizedFrame, backgroundHSV, COLOR_RGB2HSV);
-        inRange(backgroundHSV, Scalar(120, 100, 100), Scalar(130, 255, 255), labelMask);
+        cvtColor(stabilizedFrame, stabilizedFrameHSV, COLOR_RGB2HSV);
+        inRange(stabilizedFrameHSV, Scalar(120, 100, 100), Scalar(130, 255, 255), labelMask);
 
         erode(labelMask, labelMask, getStructuringElement(MORPH_RECT, Size(5, 5)));
         dilate(labelMask, labelMask, getStructuringElement(MORPH_RECT, Size(7, 7)));

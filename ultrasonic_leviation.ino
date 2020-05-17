@@ -57,7 +57,7 @@ void setup()
   int sendingFreq = 4;
   // frequency in Hz
   long waveFreq = 40000;
-  // USART BAUD/8-N-1
+  // UART BAUD/8-N-1
   Serial.begin(BAUD);
   // UBRR0 = BRC;
   // Enable sending/receiving
@@ -68,7 +68,7 @@ void setup()
   DDRC = 0b00001111;
   PORTC = 0b00000000;
 
-  // Make sure pin 10 connected to pin 11
+  // Make sure pin 10 is connected to pin 11
   pinMode(10, OUTPUT); //pin 10 (B2) will generate a signal to sync 
   pinMode(11, INPUT_PULLUP); //pin 11 (B3) is the sync in
    
@@ -79,7 +79,7 @@ void setup()
   TCCR1A = bit (WGM10) | bit (WGM11) | bit (COM1B1);
   TCCR1B = bit (WGM12) | bit (WGM13) | bit (CS10);
   OCR1A =  round(F_CPU / (RESOLUTION*waveFreq))-1;
-  OCR1B = round(F_CPU / (RESOLUTION*waveFreq*2));
+  OCR1B = round(F_CPU / (RESOLUTION*waveFreq*2))-1;
   
   interrupts();
 
@@ -111,7 +111,7 @@ void setup()
         i++;
       } else {
         i = 0;
-        USART_Transmit(phaseNum);
+        UART_Transmit(phaseNum);
         
         // if any command received and arduino is on
         if((0b00111100 & state) && (0b00000001 & state)){
@@ -143,7 +143,7 @@ void setup()
         // reset phaseNum when off
         } else phaseNum = 0;
       }
-      state = USART_Receive(state);
+      state = UART_Receive(state);
     }
 
   goto LOOP;
@@ -152,7 +152,7 @@ void setup()
 
 void loop(){}
 
-inline byte USART_Receive( byte oldData )
+inline byte UART_Receive( byte oldData )
 {
   // wait for data in register
   if( (UCSR0A & (1<<RXC0)) )
@@ -162,7 +162,7 @@ inline byte USART_Receive( byte oldData )
     return oldData;
 }
 
-inline void USART_Transmit( byte data )
+inline void UART_Transmit( byte data )
 {
   // wait until the register is empty
   while ( !( UCSR0A & (1<<UDRE0)) );

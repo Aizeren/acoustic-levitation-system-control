@@ -55,7 +55,7 @@ vector<Point2i> calcNodesCoords(vector<Point2i> emittersEdges, float waveLen, fl
 
 	float pixelsInHalfWave = (emitterHeight * (waveLen/2)) / labelLen;
 
-	uint workAreaHeight = waveLen * round(abs(emittersEdges.at(1).y - emittersEdges.at(2).y) / waveLen);
+	uint workAreaHeight = abs(emittersEdges.at(1).y - emittersEdges.at(2).y);
 	uint numOfNodes = round(workAreaHeight / pixelsInHalfWave) - isAntiphase;
 
 	for (int i = 0; i < numOfNodes; i++) {

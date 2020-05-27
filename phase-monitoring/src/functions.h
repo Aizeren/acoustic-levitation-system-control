@@ -26,5 +26,3 @@ vector<Point2i> calcNodesCoords(vector<Point2i>, float, float, uchar, uchar);
 vector<int> findSidesOfEmitters(Mat);
 
 vector<bool> findBusyNodes(vector<Point2i>, Mat);
-
-void stabilizeImage();

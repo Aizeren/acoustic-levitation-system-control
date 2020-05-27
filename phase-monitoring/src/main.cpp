@@ -45,19 +45,28 @@ int main()
     nodesStatesFile.close();
     curPhaseFile.close();
 
+    namedWindow("stabilizedFrame", WINDOW_NORMAL);
+    namedWindow("stabilizedFrameWithNodes", WINDOW_NORMAL);
+    namedWindow("labelMask", WINDOW_NORMAL);
+    namedWindow("objectsMask", WINDOW_NORMAL);
+    namedWindow("background", WINDOW_NORMAL);
+    namedWindow("frame", WINDOW_NORMAL);
+
+    goodFeaturesToTrack(backgroundGray, backPts, 200, 0.3, 7);
+
     while (true) {
-        cap >> frame;
-        if (frame.empty()) {
+        if (!cap.read(frame)) {
             cout << "Video frame is empty!" << endl;
             return -1;
         }
         cvtColor(frame, frameGray, COLOR_BGR2GRAY);
         curPhaseFile.open("../../resources/curPhase.txt");
         curPhaseFile >> tmp;
-        phaseNum = stoi(tmp);
+        if (tmp != "")
+            phaseNum = stoi(tmp);
+        else phaseNum = 0;
         curPhaseFile.close();
         // Stabilize image
-        goodFeaturesToTrack(backgroundGray, backPts, 200, 0.3, 7);
         calcOpticalFlowPyrLK(backgroundGray, frameGray, backPts, framePts, status, err);
         Mat transformationMatrix = estimateAffinePartial2D(backPts, framePts);
         warpAffine(frameGray, stabilizedFrameGray, transformationMatrix, backgroundGray.size(),
@@ -71,7 +80,6 @@ int main()
         stabilizedFrameROI = Rect2i(widthShift, heightShift,
             backgroundGray.size().width - widthShift * 2,
             backgroundGray.size().height - heightShift * 2);
-        backgroundCropped = background(stabilizedFrameROI);
         backgroundGrayCropped = backgroundGray(stabilizedFrameROI);
         stabilizedFrameGray = stabilizedFrameGray(stabilizedFrameROI);
         stabilizedFrame = stabilizedFrame(stabilizedFrameROI);
@@ -103,7 +111,6 @@ int main()
                 nodesStatesFile << to_string(isNodeBusy.at(i));
             }
             nodesStatesFile.close();
-            cout << int(phaseNum) << endl;
         }
         else {
             nodesStatesFile.open("../../resources/nodesStates.txt", ofstream::out | ofstream::trunc);
@@ -113,21 +120,20 @@ int main()
 
         // !--------------- ONLY OUTPUTS -----------------!
 
+        imshow("background", background);
+        imshow("frame", frame);
+        imshow("stabilizedFrame", stabilizedFrame);
         for (int i = 0; i < nodesCoordinates.size(); i++) {
-            if (isNodeBusy.at(i) == true)
-                circle(stabilizedFrameGray, nodesCoordinates.at(i), 3, Scalar(255), 2);
-            else
-                circle(stabilizedFrameGray, nodesCoordinates.at(i), 3, Scalar(0), 2);
+            circle(stabilizedFrame, nodesCoordinates.at(i), 3, Scalar(255, 255, 0), 3);
         }
-
-        namedWindow("stabilizedFrame", WINDOW_NORMAL);
-        imshow("stabilizedFrame", stabilizedFrameGray);
-        namedWindow("labelMask", WINDOW_NORMAL);
+        for (int i = 0; i < emittersEdges.size(); i++) {
+            circle(stabilizedFrame, emittersEdges.at(i), 3, Scalar(255, 0, 0), 3);
+        }
+        imshow("stabilizedFrameWithNodes", stabilizedFrame);
         imshow("labelMask", labelMask);
-        namedWindow("objectsMask", WINDOW_NORMAL);
         imshow("objectsMask", objectsMask);
-
-        waitKey(10);
+        
+        waitKey(0);
     }
 
     return 0;

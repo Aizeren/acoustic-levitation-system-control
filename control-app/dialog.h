@@ -16,30 +16,31 @@ public:
     Dialog(QWidget *parent = nullptr);
     ~Dialog();
 
+protected:
+    void paintEvent(QPaintEvent *event);
+
 private slots:
     void readSerial();
+    void sendDataToArduino(char);
+    void drawNodes();
     void on_turnOnPushButton_clicked();
     void on_turnOffPushButton_clicked();
     void on_upPushButton_clicked();
     void on_initPushButton_clicked();
     void on_downPushButton_clicked();
-    //void sendDataToArduino(QString);
-    void sendDataToArduino(char);
-
     void on_stopPushButton_clicked();
 
 private:
     Ui::Dialog *ui;
     QSerialPort *arduino;
-    static const quint16 arduino_vendor_id = 6790;
-    static const quint16 arduino_product_id = 29987;
-    QString arduino_port_name;
-    bool arduino_is_available;
-    bool isArduinoOn;
-    QFile curPhaseFile;
-    QFile nodesStatesFile;
-    int receivedFrameNum;
-    QString receivedNodesStates;
+    static const quint16 ARDUINO_VENDOR_ID = 6790;
+    static const quint16 ARDUINO_PRODUCT_ID = 29987;
+    QString arduinoPortName;
+    bool isArduinoAvailable, isArduinoOn;
 
+    QFile curPhaseFile, nodesStatesFile;
+    QString receivedNodesStates;
+    int xCoord, yInitCoord, pxInQuarterWavelength,
+        receivedFrameNum, numOfNodes;
 };
 #endif // DIALOG_H

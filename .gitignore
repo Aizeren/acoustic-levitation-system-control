@@ -391,3 +391,8 @@ face-detection/face-detection.vcxproj.filters
 face-detection.sln
 build/
 build-control-app-Desktop_x86_windows_msvc2019_pe_64bit-Debug/
+*.png
+*.xcf
+*.mp4
+*.csv
+*.mp4

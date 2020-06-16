@@ -4,13 +4,13 @@
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
+    QApplication app(argc, argv);
     QFile style(":/style.css");
     style.open(QFile::ReadOnly);
-    a.setStyleSheet(style.readAll());
-    Dialog w;
-    w.setFixedSize(500, 350);
-    w.setWindowTitle("Acoustic Levitation System Control");
-    w.show();
-    return a.exec();
+    app.setStyleSheet(style.readAll());
+    Dialog window;
+    window.setFixedSize(500, 350);
+    window.setWindowTitle("Acoustic Levitation System Control");
+    window.show();
+    return app.exec();
 }

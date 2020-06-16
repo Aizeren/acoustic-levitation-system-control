@@ -48,7 +48,7 @@ vector<Point2i> calcNodesCoords(vector<Point2i> emittersEdges, float waveLen, fl
 	int ytop = emittersEdges.at(1).y;
 	int ybottom = emittersEdges.at(2).y;
 	char isAntiphase = (phaseNum == 0) ? 0 : 1; // 0 - yes
-	float phaseShift = float(phaseNum) / float(maxPhaseNum) + 0.4;
+	float phaseShift = float(phaseNum) / float(maxPhaseNum) + 0.5;
 	uint emitter1Height = abs(emittersEdges.at(0).y - emittersEdges.at(1).y);
 	uint emitter2Height = abs(emittersEdges.at(2).y - emittersEdges.at(3).y);
 	float emitterHeight = (emitter1Height + emitter2Height)/2;
@@ -86,5 +86,25 @@ vector<bool> findBusyNodes(vector<Point2i> nodesCoordinates, Mat objectsMask) {
 		}
 	}
 
+	return res;
+}
+
+vector<Point2i> calcObjCoordantes(Mat objMask, Rect2i roi) {
+	vector<Point2i> res;
+	int counter = 0;
+	int x_sum = 0;
+	int y_sum = 0;
+
+	for (int x_i = roi.x+3; x_i < roi.x + roi.width-3; x_i++) {
+		for (int y_i = roi.y + 10; y_i < roi.y + roi.height - 5; y_i++) {
+			if (objMask.at<uchar>(Point(x_i, y_i)) != 0) {
+				counter++;
+				x_sum += x_i;
+				y_sum += y_i;
+			}
+		}
+	}
+	if (counter != 0)
+		res.push_back(Point(x_sum / counter, y_sum / counter));
 	return res;
 }

@@ -5,7 +5,6 @@
 #define BAUD  115200UL
 // #define BRC   ((F_CPU / (16*BAUD)) - 1)
 #define RESOLUTION 24
-#define STEP_SIZE 1
 
 #define OUTPUT_WAVE(pointer, i) PORTC = pointer[i]
 
@@ -44,9 +43,10 @@ void setup()
   // state byte:
   // bit 0 - Turn On
   // bit 1 - Turn Off
-  // bit 2 - Lift Up
+  // bit 2 - Lift Down
   // bit 3 - Initial Position
-  // bit 4 - Lift Down
+  // bit 4 - Lift Up
+  // bit 5 - Stop
   byte state = 0b00000001;
   byte phaseNum = 0;
   byte* curPhasePointer = &phases[0][0];
@@ -59,12 +59,10 @@ void setup()
   long waveFreq = 40000;
   // UART BAUD/8-N-1
   Serial.begin(BAUD);
-  // UBRR0 = BRC;
   // Enable sending/receiving
   UCSR0B = (1<<TXEN0)|(1<<RXEN0);
 
   // Pins A0 - A3 are outputs
-  // T- T+ B+ B-
   DDRC = 0b00001111;
   PORTC = 0b00000000;
 
@@ -98,9 +96,11 @@ void setup()
     OUTPUT_WAVE(curPhasePointer, phasePartNum);
     
     if (phasePartNum < RESOLUTION - 1)
-      phasePartNum += STEP_SIZE;
+      phasePartNum++;
     else {
       phasePartNum = 0;
+      
+      state = UART_Receive(state);
       
       if(0b00000001 & state)
         curPhasePointer = &phases[phaseNum][0];
@@ -113,21 +113,21 @@ void setup()
         i = 0;
         UART_Transmit(phaseNum);
         
-        // if any command received and arduino is on
-        if((0b00111100 & state) && (0b00000001 & state)){
-          // lift up
+        // if any command received
+        if(0b00111100 & state){
+          // lift down
           if(0b00000100 & state){
-            if(phaseNum > 0)
-              phaseNum--;
-            else
-              phaseNum = RESOLUTION - 1;
-          }   
-          //lift down
-          else if(0b00010000 & state){
             if(phaseNum < RESOLUTION - 1)
               phaseNum++;
             else
               phaseNum = 0;
+          }   
+          //lift up
+          else if(0b00010000 & state){
+            if(phaseNum > 0)
+              phaseNum--;
+            else
+              phaseNum = RESOLUTION - 1;
           }    
           // init position
           else if(0b00001000 & state){
@@ -143,7 +143,6 @@ void setup()
         // reset phaseNum when off
         } else phaseNum = 0;
       }
-      state = UART_Receive(state);
     }
 
   goto LOOP;

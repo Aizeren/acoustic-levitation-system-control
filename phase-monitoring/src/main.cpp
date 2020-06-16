@@ -1,5 +1,7 @@
 #include "functions.h"
 #include <fstream>
+#include <chrono>
+
 int main()
 {
     // initial position - in phase
@@ -8,8 +10,19 @@ int main()
     uchar phaseNum = 0, maxPhaseNum = 23;
 
     ofstream nodesStatesFile("../../resources/nodesStates.txt");
+    ofstream logFile("../../resources/nodesCoordinates.csv");
+    logFile.open("../../resources/nodesCoordinates.csv", ofstream::out | ofstream::trunc);
+    logFile.close();
+    logFile.open("../../resources/nodesCoordinates.csv", ofstream::out | ofstream::app);
     ifstream curPhaseFile("../../resources/curPhase.txt");
-    VideoCapture cap("../../resources/video.mp4");
+
+    ofstream logObjFile("../../resources/objCoordinates.csv");
+    logObjFile.open("../../resources/objCoordinates.csv", ofstream::out | ofstream::trunc);
+    logObjFile.close();
+    
+
+    //VideoCapture cap("../../resources/video_final_2.mp4");
+    VideoCapture cap(0);
     if (!cap.isOpened()) {
         cout << "Error opening video stream" << endl;
         return -1;
@@ -27,7 +40,7 @@ int main()
     vector<Point2f> backPts, framePts;
     vector<uchar> status;
     vector<float> err;
-    vector<Point2i> emittersEdges, nodesCoordinates;
+    vector<Point2i> emittersEdges, nodesCoordinates, objCoordinates;
     vector<bool> isNodeBusy;
     Rect2i emittersROI, stabilizedFrameROI;
     // X coordinates of left and right sides of emitters
@@ -45,14 +58,23 @@ int main()
     nodesStatesFile.close();
     curPhaseFile.close();
 
-    namedWindow("stabilizedFrame", WINDOW_NORMAL);
+    if (!logFile.is_open()) {
+        cout << "Couldn't open or find nodesCoordinates.csv file." << endl;
+        return -1;
+    }
+
+    //namedWindow("stabilizedFrame", WINDOW_NORMAL);
     namedWindow("stabilizedFrameWithNodes", WINDOW_NORMAL);
     namedWindow("labelMask", WINDOW_NORMAL);
-    namedWindow("objectsMask", WINDOW_NORMAL);
-    namedWindow("background", WINDOW_NORMAL);
+   // namedWindow("objectsMask", WINDOW_NORMAL);
+    /*namedWindow("background", WINDOW_NORMAL);
     namedWindow("frame", WINDOW_NORMAL);
+    namedWindow("imgDiff", WINDOW_NORMAL);*/
 
     goodFeaturesToTrack(backgroundGray, backPts, 200, 0.3, 7);
+    uint64 init_time = chrono::duration_cast<chrono::milliseconds>(
+        chrono::system_clock::now().time_since_epoch()).count();
+    cout << init_time << endl;
 
     while (true) {
         if (!cap.read(frame)) {
@@ -60,12 +82,7 @@ int main()
             return -1;
         }
         cvtColor(frame, frameGray, COLOR_BGR2GRAY);
-        curPhaseFile.open("../../resources/curPhase.txt");
-        curPhaseFile >> tmp;
-        if (tmp != "")
-            phaseNum = stoi(tmp);
-        else phaseNum = 0;
-        curPhaseFile.close();
+        
         // Stabilize image
         calcOpticalFlowPyrLK(backgroundGray, frameGray, backPts, framePts, status, err);
         Mat transformationMatrix = estimateAffinePartial2D(backPts, framePts);
@@ -95,46 +112,91 @@ int main()
         emittersSides = findSidesOfEmitters(labelMask);
         if (emittersSides.size() != 0) {
             emittersEdges = findEmittersEdges(labelMask, emittersSides);
-            emittersROI = Rect2i(Point(emittersSides.at(0), emittersEdges.at(1).y),
-                Point(emittersSides.at(1), emittersEdges.at(2).y));
-            // Make a mask containing objects as white areas
-            absdiff(backgroundGrayCropped, stabilizedFrameGray, imgDiff);
-            threshold(imgDiff, objectsMask, 254, 255, THRESH_BINARY);
-            threshold(imgDiff(emittersROI), objectsMask(emittersROI), 80, 255, THRESH_BINARY);
+            //cout << "sides size: " << emittersSides.size() << endl;
+            if (emittersEdges.size() != 0) {
+                //cout << "eges size: " << emittersEdges.size() << endl;
+                emittersROI = Rect2i(Point(emittersSides.at(0), emittersEdges.at(1).y),
+                    Point(emittersSides.at(1), emittersEdges.at(2).y));
+                // Make a mask containing objects as white areas
+                absdiff(backgroundGrayCropped, stabilizedFrameGray, imgDiff);
+                threshold(imgDiff, objectsMask, 254, 255, THRESH_BINARY);
+                threshold(imgDiff(emittersROI), objectsMask(emittersROI), 80, 255, THRESH_BINARY);
 
-            nodesCoordinates = calcNodesCoords(emittersEdges, waveLen, labelLen, phaseNum, maxPhaseNum);
+                curPhaseFile.open("../../resources/curPhase.txt");
+                curPhaseFile >> tmp;
+                if (tmp != "")
+                    phaseNum = stoi(tmp);
+                else phaseNum = 0;
+                curPhaseFile.close();
 
-            isNodeBusy = findBusyNodes(nodesCoordinates, objectsMask);
+                nodesCoordinates = calcNodesCoords(emittersEdges, waveLen, labelLen, phaseNum, maxPhaseNum);
 
-            nodesStatesFile.open("../../resources/nodesStates.txt", ofstream::out | ofstream::trunc);
-            for (int i = 0; i < isNodeBusy.size(); i++) {
-                nodesStatesFile << to_string(isNodeBusy.at(i));
+                /*logFile << to_string(chrono::duration_cast<chrono::milliseconds>(
+                    chrono::system_clock::now().time_since_epoch()).count() - init_time) << ";";
+                //cout << to_string(chrono::duration_cast<chrono::milliseconds>(
+                //    chrono::system_clock::now().time_since_epoch()).count() - init_time) << endl;
+                for (int i = 0; i < nodesCoordinates.size(); i++) {
+                    logFile << to_string(nodesCoordinates.at(i).y) << ";";
+                    //cout << to_string(nodesCoordinates.at(i).y) << endl;
+                }
+                logFile << "\n";*/
+
+                objCoordinates = calcObjCoordantes(objectsMask, emittersROI);
+                
+
+                isNodeBusy = findBusyNodes(nodesCoordinates, objectsMask);
+
+                nodesStatesFile.open("../../resources/nodesStates.txt", ofstream::out | ofstream::trunc);
+                //nodesStatesFile << to_string(1);
+                for (int i = 0; i < isNodeBusy.size(); i++) {
+                    nodesStatesFile << to_string(isNodeBusy.at(i));
+                }
+                //nodesStatesFile << to_string(1);
+                nodesStatesFile.close();
+
+                logObjFile.open("../../resources/objCoordinates.csv", ofstream::out | ofstream::app);
+                logObjFile << to_string(chrono::duration_cast<chrono::milliseconds>(
+                    chrono::system_clock::now().time_since_epoch()).count() - init_time) << ";";
+                for (int i = 0; i < objCoordinates.size(); i++) {
+                    logObjFile << to_string(objCoordinates.at(i).x) << ";";
+                    logObjFile << to_string(objCoordinates.at(i).y) << ";";
+                    //cout << "x: " << objCoordinates.at(i).x;
+                    //cout << "y: " << objCoordinates.at(i).y;
+                }
+                logObjFile << "\n"; logObjFile.close();
+            } else {
+                nodesStatesFile.open("../../resources/nodesStates.txt", ofstream::out | ofstream::trunc);
+                nodesStatesFile << to_string(2);
+                nodesStatesFile.close();
             }
-            nodesStatesFile.close();
         }
-        else {
-            nodesStatesFile.open("../../resources/nodesStates.txt", ofstream::out | ofstream::trunc);
-            nodesStatesFile << to_string(2);
-            nodesStatesFile.close();
-        }
+        
 
         // !--------------- ONLY OUTPUTS -----------------!
 
-        imshow("background", background);
+        /*imshow("background", background);
         imshow("frame", frame);
-        imshow("stabilizedFrame", stabilizedFrame);
+        imshow("stabilizedFrame", stabilizedFrame);*/
         for (int i = 0; i < nodesCoordinates.size(); i++) {
-            circle(stabilizedFrame, nodesCoordinates.at(i), 3, Scalar(255, 255, 0), 3);
+            if(isNodeBusy.at(i) == 0)
+                circle(stabilizedFrame, nodesCoordinates.at(i), 2, Scalar(0, 0, 255), 1);
+            else
+                circle(stabilizedFrame, nodesCoordinates.at(i), 2, Scalar(0, 255, 0), 1);
+        
         }
+        cvtColor(labelMask, labelMask, COLOR_GRAY2BGR);
         for (int i = 0; i < emittersEdges.size(); i++) {
-            circle(stabilizedFrame, emittersEdges.at(i), 3, Scalar(255, 0, 0), 3);
+            circle(stabilizedFrame, emittersEdges.at(i), 2, Scalar(255, 0, 0), 1);
+            circle(labelMask, emittersEdges.at(i), 2, Scalar(0, 0, 255), 1);
         }
         imshow("stabilizedFrameWithNodes", stabilizedFrame);
         imshow("labelMask", labelMask);
-        imshow("objectsMask", objectsMask);
+        //imshow("objectsMask", objectsMask);
+        /*imshow("imgDiff", imgDiff);*/
         
-        waitKey(0);
+        waitKey(2);
     }
 
+    
     return 0;
 }

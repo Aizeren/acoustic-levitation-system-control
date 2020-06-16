@@ -23,7 +23,7 @@ background-color: #1B1B1E;</string>
     <rect>
      <x>0</x>
      <y>1</y>
-     <width>491</width>
+     <width>498</width>
      <height>341</height>
     </rect>
    </property>
@@ -44,7 +44,7 @@ background-color: #1B1B1E;</string>
      <number>10</number>
     </property>
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="2,3">
+     <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="4,6">
       <property name="spacing">
        <number>40</number>
       </property>
@@ -129,50 +129,21 @@ background-color: #1B1B1E;</string>
        </layout>
       </item>
       <item>
-       <widget class="QLCDNumber" name="heightNumber">
-        <property name="minimumSize">
-         <size>
-          <width>100</width>
-          <height>0</height>
-         </size>
+       <widget class="QLabel" name="imgLabel">
+        <property name="frameShape">
+         <enum>QFrame::Box</enum>
         </property>
-        <property name="maximumSize">
-         <size>
-          <width>5000</width>
-          <height>16777215</height>
-         </size>
+        <property name="frameShadow">
+         <enum>QFrame::Raised</enum>
         </property>
-        <property name="font">
-         <font>
-          <family>Calibri Light</family>
-          <pointsize>14</pointsize>
-          <weight>3</weight>
-          <italic>false</italic>
-          <bold>false</bold>
-          <kerning>true</kerning>
-         </font>
-        </property>
-        <property name="layoutDirection">
-         <enum>Qt::LeftToRight</enum>
-        </property>
-        <property name="autoFillBackground">
-         <bool>false</bool>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">background-color: #373F51;
-color: #D8DBE2;</string>
-        </property>
-        <property name="smallDecimalPoint">
-         <bool>false</bool>
-        </property>
-        <property name="digitCount">
+        <property name="lineWidth">
          <number>2</number>
         </property>
-        <property name="segmentStyle">
-         <enum>QLCDNumber::Filled</enum>
+        <property name="midLineWidth">
+         <number>0</number>
         </property>
-        <property name="intValue" stdset="0">
-         <number>23</number>
+        <property name="text">
+         <string/>
         </property>
        </widget>
       </item>

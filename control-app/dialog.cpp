@@ -11,10 +11,8 @@ Dialog::Dialog(QWidget *parent)
     , ui(new Ui::Dialog)
 {
     ui->setupUi(this);
-    ui->heightNumber->display("--");
 
-    arduino_is_available = false;
-    arduino_port_name = "";
+    isArduinoAvailable = false;
     arduino = new QSerialPort();
     isArduinoOn = true;
 
@@ -34,31 +32,18 @@ Dialog::Dialog(QWidget *parent)
     curPhaseFile.close();
     nodesStatesFile.close();
 
-//    qDebug() << "Number of available ports: " << QSerialPortInfo::availablePorts().length();
-//    foreach(const QSerialPortInfo &serialPortInfo, QSerialPortInfo::availablePorts()){
-//        qDebug() << "Has vedor ID: " << serialPortInfo.hasVendorIdentifier();
-//        if(serialPortInfo.hasVendorIdentifier()){
-//            qDebug() << "Vendor ID: " << serialPortInfo.vendorIdentifier();
-//        }
-//        qDebug() << "Has product ID: " << serialPortInfo.hasProductIdentifier();
-//        if(serialPortInfo.hasProductIdentifier()){
-//            qDebug() << "Product ID: " << serialPortInfo.productIdentifier();
-//        }
-//    }
-
     foreach(const QSerialPortInfo &serialPortInfo, QSerialPortInfo::availablePorts()){
         if (serialPortInfo.hasVendorIdentifier() && serialPortInfo.hasProductIdentifier()){
-            if(serialPortInfo.vendorIdentifier() == arduino_vendor_id &&
-                    serialPortInfo.productIdentifier() == arduino_product_id){
-                arduino_port_name = serialPortInfo.portName();
-                arduino_is_available = true;
+            if(serialPortInfo.vendorIdentifier() == ARDUINO_VENDOR_ID &&
+                    serialPortInfo.productIdentifier() == ARDUINO_PRODUCT_ID){
+                arduinoPortName = serialPortInfo.portName();
+                isArduinoAvailable = true;
             }
         }
     }
 
-    if(arduino_is_available){
-        // configure serialport
-        arduino->setPortName(arduino_port_name);
+    if(isArduinoAvailable){
+        arduino->setPortName(arduinoPortName);
         arduino->open(QSerialPort::ReadWrite);
         arduino->setBaudRate(QSerialPort::Baud115200);
         arduino->setDataBits(QSerialPort::Data8);
@@ -69,6 +54,11 @@ Dialog::Dialog(QWidget *parent)
     } else {
         QMessageBox::warning(this, "Port error", "Couldn't access Arduino!");
     }
+
+    ui->imgLabel->setScaledContents(true);
+    ui->imgLabel->setPixmap(QPixmap("../resources/black.png"));
+
+    xCoord = int(ui->imgLabel->pixmap()->width() / 2);
 }
 
 Dialog::~Dialog()
@@ -83,7 +73,9 @@ void Dialog::readSerial(){
     bool ok;
     QByteArray serialData = arduino->readAll();
     receivedFrameNum = QString::fromStdString(serialData.toHex().toStdString()).toInt(&ok, 16);
-    ui->heightNumber->display(receivedFrameNum);
+
+    qDebug() << receivedFrameNum;
+
     curPhaseFile.open(QFile::WriteOnly|QFile::Truncate);
     curPhaseFile.write(QByteArray::number(receivedFrameNum));
     curPhaseFile.close();
@@ -91,6 +83,8 @@ void Dialog::readSerial(){
     nodesStatesFile.open(QFile::ReadOnly);
     receivedNodesStates = QString::fromStdString(nodesStatesFile.readAll().toStdString());
     nodesStatesFile.close();
+
+    drawNodes();
 }
 
 void Dialog::on_turnOnPushButton_clicked()
@@ -103,48 +97,76 @@ void Dialog::on_turnOnPushButton_clicked()
 
 void Dialog::on_turnOffPushButton_clicked()
 {
-    isArduinoOn = false;
-    ui->heightNumber->display("--");
     sendDataToArduino(2);
+    isArduinoOn = false;
 }
 
 void Dialog::on_upPushButton_clicked()
 {
-    if(isArduinoOn)
-        sendDataToArduino(4+1);
-    else
-        sendDataToArduino(4);
+    sendDataToArduino(16);
 }
 
 void Dialog::on_initPushButton_clicked()
 {
-    if(isArduinoOn)
-        sendDataToArduino(8+1);
-    else
-        sendDataToArduino(8);
+    sendDataToArduino(8);
 }
 
 void Dialog::on_downPushButton_clicked()
 {
-    if(isArduinoOn)
-        sendDataToArduino(16+1);
-    else
-        sendDataToArduino(16);
+    sendDataToArduino(4);
 }
 
 void Dialog::on_stopPushButton_clicked()
 {
-    if(isArduinoOn)
-        sendDataToArduino(32+1);
-    else
-        sendDataToArduino(32);
+    sendDataToArduino(32);
 }
 void Dialog::sendDataToArduino(char val){
-    if(arduino->isWritable()){
-        arduino->write(QByteArray(&val));
-    } else {
-        QMessageBox::warning(this, "Port error", "Couldn't write data to Arduino!");
+    if(isArduinoOn){
+        if(arduino->isWritable()){
+            arduino->write(QByteArray(&val));
+        } else {
+            QMessageBox::warning(this, "Port error", "Couldn't write data to Arduino!");
+        }
     }
 }
 
+void Dialog::drawNodes(){
+    QString wavelengthsBetweenEmitters = QString::number(ceil(numOfNodes / 2));
+    ui->imgLabel->setPixmap(QPixmap("../resources/" + wavelengthsBetweenEmitters + "/" +
+                                    wavelengthsBetweenEmitters + "_" +
+                                    QString::number(receivedFrameNum) + ".png"));
+    repaint();
+}
 
+void Dialog::paintEvent(QPaintEvent *event){
+    Q_UNUSED(event)
+    int brushHeight = 14;
+    int brushWidth = 14;
+    numOfNodes = receivedNodesStates.length();
+    if(isArduinoOn && numOfNodes != 0){
+        if(numOfNodes % 2 == 0){
+            pxInQuarterWavelength = int((ui->imgLabel->pixmap()->height() / (numOfNodes + 2)) / 2);
+        } else {
+            pxInQuarterWavelength = int((ui->imgLabel->pixmap()->height() / (numOfNodes + 3)) / 2);
+        }
+        yInitCoord = int(3 * pxInQuarterWavelength +
+                         2 * pxInQuarterWavelength * float(receivedFrameNum) / 24);
+
+        QPixmap pmap(*ui->imgLabel->pixmap());
+        QPainter painter(&pmap);
+        painter.setPen(QPen(Qt::black, 1, Qt::SolidLine, Qt::FlatCap));
+
+        painter.setBrush(QBrush(QColor(55, 159, 39), Qt::SolidPattern));
+        for(int i = 0; i < numOfNodes; i++){
+            if(receivedNodesStates.at(i) == '1'){
+                painter.drawEllipse(xCoord - int(brushWidth / 2),
+                                    yInitCoord - int(brushHeight / 2.0) + i * 2 * pxInQuarterWavelength,
+                                    brushWidth, brushHeight);
+            }
+        }
+
+        ui->imgLabel->setPixmap(pmap);
+    } else {
+        ui->imgLabel->setPixmap(QPixmap("../resources/black.png"));
+    }
+}

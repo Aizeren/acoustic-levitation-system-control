@@ -8,7 +8,6 @@ This project uses Arduino and ultrasonic emitters to levitate small particles in
 
 ## Running
 You need to load "ultrasonic_levitation.ino" on your Arduino (the project used Arduino Uno) and connect pins according to the scheme given below:
-![Схема подключения](https://github.com/Aizeren/acoustic-levitation-system-control/blob/master/resources/scheme.png | width = 600)
-<img src="https://github.com/Aizeren/acoustic-levitation-system-control/blob/master/resources/scheme.png" alt="alt text" width=600>
+<img src="https://github.com/Aizeren/acoustic-levitation-system-control/blob/master/resources/scheme.png" width=500>
 
 Connect the Arduino to your computer via USB. Run Qt App. Have Fun!

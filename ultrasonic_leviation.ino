@@ -48,13 +48,14 @@ void setup()
   // bit 4 - Lift Up
   // bit 5 - Stop
   byte state = 0b00000001;
-  byte phaseNum = 0;
+  char phaseNum = 0;
   byte* curPhasePointer = &phases[0][0];
-  short phasePartNum = 0;
+  char phasePartNum = 0;
+  short initPosShift = 0;
   // counter for sending/receiving data
   int i = 0;
   // how many times per second send data
-  int sendingFreq = 4;
+  char sendingFreq = 4;
   // frequency in Hz
   long waveFreq = 40000;
   // UART BAUD/8-N-1
@@ -102,9 +103,8 @@ void setup()
       
       state = UART_Receive(state);
       
-      if(0b00000001 & state)
-        curPhasePointer = &phases[phaseNum][0];
-      else if(0b00000010 & state)
+      curPhasePointer = &phases[phaseNum][0];
+      if(0b00000010 & state)
         curPhasePointer = &offArr[0];
         
       if(i != round(waveFreq/sendingFreq)){
@@ -117,6 +117,7 @@ void setup()
         if(0b00111100 & state){
           // lift down
           if(0b00000100 & state){
+            initPosShift++;
             if(phaseNum < RESOLUTION - 1)
               phaseNum++;
             else
@@ -124,6 +125,7 @@ void setup()
           }   
           //lift up
           else if(0b00010000 & state){
+            initPosShift--;
             if(phaseNum > 0)
               phaseNum--;
             else
@@ -131,8 +133,14 @@ void setup()
           }    
           // init position
           else if(0b00001000 & state){
-            if(phaseNum > 0)
-              phaseNum--;
+            if(initPosShift != 0){
+              phaseNum = phaseNum - ((initPosShift>0)-(initPosShift<0));
+              if (phaseNum > RESOLUTION - 1)
+                phaseNum = 0;
+              if (phaseNum < 0)
+                phaseNum = RESOLUTION - 1;
+              initPosShift-=((initPosShift>0)-(initPosShift<0));
+            }
             else
               phaseNum = 0;
           }
